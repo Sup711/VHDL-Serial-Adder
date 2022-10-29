@@ -1,0 +1,45 @@
+-- Company	: RIT
+-- Author	: Eliot Nagy
+-- Created	: 4/11/22
+--
+-- Project Name	: ex12
+-- File		: SerialAdderWithControl.vhd
+--
+-- Entity	: SerialAdderWithControl
+-- Architecture	: SAC
+--
+-- Description	: Implements a serial adder with a control unit by combining smaller components
+--
+-- Notes	: None
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Creates the 11 inputs and 6 outputs
+entity SerialAdderWithControl is
+	port (
+		signal in_a, in_b : in std_logic_vector(3 downto 0);
+		signal start, clk, clear_sum : in std_logic;
+		signal sum : out std_logic_vector(3 downto 0);
+		signal carry, ready : out std_logic);
+	
+end entity SerialAdderWithControl;
+
+architecture SAC of SerialAdderWithControl is
+
+	-- Creates an internal signal used to store the output from the state machine
+	signal CUout : std_logic_vector(3 downto 0);
+
+begin
+
+	-- Brings in and maps the control unit
+	CU : entity work.ControlUnit
+		port map(clk => clk, start => start, clear_sum => clear_sum, control_output => CUout);
+
+	-- Brings in and maps the serial adder
+	SA : entity work.SerialAdder
+		port map(in_a => in_a, in_b => in_b, control => CUout(1 downto 0), 
+				 clk => clk, clear_dp => CUout(2), sum => sum, carry => carry);
+	ready <= CUout(3);
+	
+end architecture;

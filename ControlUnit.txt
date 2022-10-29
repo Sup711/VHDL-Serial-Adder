@@ -1,0 +1,88 @@
+-- Company	: RIT
+-- Author	: Eliot Nagy
+-- Created	: 4/11/22
+--
+-- Project Name	: ex12
+-- File		: ControlUnit.vhd
+--
+-- Entity	: ControlUnit
+-- Architecture	: CU
+--
+-- Description	: Implements a control unit for the serial adder using a state machine
+--
+-- Notes	: None
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Creates the 3 inputs and 4 outputs
+entity ControlUnit is
+	port (
+		clk, start, clear_sum : in std_logic;
+		control_output : out std_logic_vector(3 downto 0));
+	
+end entity ControlUnit;
+
+
+architecture CU of ControlUnit is
+
+	-- Creates the 8 different states
+	type state_type is (idle, reset, load, S1, S2, S3, S4, hold);
+	-- Creates the internal signals
+	signal next_state, state : state_type;
+
+begin
+
+	-- Used to update the state on the rising clock edge
+	state_proc : process(clk) is begin
+		if rising_edge(clk) then
+			if clear_sum = '0' then
+				state <= idle;
+			else
+				state <= next_state;
+			end if;
+		end if;
+	end process;
+
+	-- Used to update the next state when the state changes
+	next_state_proc : process(state, start) is begin
+		case state is
+			when idle => next_state <= reset;
+				if (start = '0') then
+					next_state <= state;
+				else
+					next_state <= reset;
+				end if;
+			when reset => next_state <= load;
+
+			when load => next_state <= S1;
+
+			when S1 => next_state <= S2;
+
+			when S2 => next_state <= S3;
+
+			when S3 => next_state <= S4;
+
+			when S4 => next_state <= hold;
+
+			when others => next_state <= idle;
+		end case;
+	end process;
+
+	-- Used to select the output when the state changes
+	output_process : process(state, clear_sum) is begin
+		case state is
+			when idle => control_output <= "1100" after 10 ns;
+			when reset => control_output <= "0000" after 10 ns;
+			when load => control_output <= "0111" after 10 ns;
+			when S1 => control_output <= "0101" after 10 ns;
+			when S2 => control_output <= "0101" after 10 ns;
+			when S3 => control_output <= "0101" after 10 ns;
+			when S4 => control_output <= "0101" after 10 ns;
+			when others => control_output <= "0100" after 10 ns;
+		end case;
+	end process;
+
+
+	
+end architecture CU;

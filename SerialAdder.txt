@@ -1,0 +1,72 @@
+-- Company	: RIT
+-- Author	: Eliot Nagy
+-- Created	: 4/11/22
+--
+-- Project Name	: ex12
+-- File		: SerialAdder.vhd
+--
+-- Entity	: SerialAdder
+-- Architecture	: SA
+--
+-- Description	: Implements a serial adder by combining multiple smaller components
+--
+-- Notes	: None
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Creates the 12 inputs and 5 outputs
+entity SerialAdder is
+	port (
+		signal in_a, in_b : in std_logic_vector(3 downto 0);
+		signal control : in std_logic_vector(1 downto 0);
+		signal clk, clear_dp : in std_logic;
+		signal sum : out std_logic_vector(3 downto 0);
+		signal carry : out std_logic);
+end entity SerialAdder;
+
+	
+
+architecture SA of SerialAdder is
+
+	-- Creates internal signals to control the data
+	signal aQdO, bQdO : std_logic;
+	signal faSO, faCoO : std_logic;
+	signal dffQO : std_logic;
+	signal invYO : std_logic;
+	signal andYO : std_logic;
+	signal trash : std_logic;
+
+begin
+
+	-- Brings in and maps the inverter
+	not0 : entity work.Inverter
+		port map(A => control(1), Y => invYO);
+
+	-- Brings in and maps the and gate
+	and0 : entity work.And2
+		port map(A => invYO, B => control(0), Y => andYO);
+
+	-- Brings in and maps shift register A
+	regA : entity work.DM74LS194A
+		port map(clear => clear_dp, S1 => control(1), S0 => control(0), clk => clk, SL => trash, SR => faSO,
+				 A => in_a(3), B => in_a(2), C => in_a(1), D => in_a(0), 
+				 Qa => sum(3), Qb => sum(2), Qc => sum(1), Qd => aQdO);
+	sum(0) <= aQdO;
+
+	-- Brings in and maps shift register B
+	regB : entity work.DM74LS194A
+		port map(clear => clear_dp, S1 => control(1), S0 => control(0), clk => clk, SL => trash, SR => trash,
+				 A => in_b(3), B => in_b(2), C => in_b(1), D => in_b(0),
+				 Qa => trash, Qb => trash, Qc => trash, Qd => bQdO);
+
+	-- Brings in and maps the D Flip-Flop
+	dff0 : entity work.DFlipFlop
+		port map(clear => clear_dp, enable => andYO, clk => clk, D => faCoO, Q => dffQO);
+	carry <= dffQO;
+
+	-- Brings in and maps the full adder
+	fa0 : entity work.FullAdder
+		port map(A => aQdO, B => bQdO, Cin => dffQO, Cout => faCoO, Sum => faSO);
+	
+end architecture SA;

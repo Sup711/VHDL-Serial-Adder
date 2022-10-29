@@ -1,0 +1,41 @@
+-- Company	: RIT
+-- Author	: Eliot Nagy
+-- Created	: 4/11/22
+--
+-- Project Name	: ex12
+-- File		: DFlipFlop.vhd
+--
+-- Entity	: DFlipFlop
+-- Architecture	: dff
+--
+-- Description	: Implements a D Flip-Flop
+--
+-- Notes	: None
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Creates the 4 inputs and 1 output
+entity DFlipFlop is
+	port (
+		signal clear, enable : in std_logic;
+		signal clk, D : in std_logic;
+		signal Q : out std_logic);
+	
+end entity DFlipFlop;
+
+architecture dff of DFlipFlop is
+begin
+
+	-- Changes the output of the DFF on the rising edge
+	proc1 : process(clk) is begin
+		if rising_edge(clk) then
+			if (clear = '0') then
+				Q <= '0' after 6 ns;
+			elsif (enable = '1') then
+				Q <= D after 6 ns;
+			end if;
+		end if;
+	end process; -- proc1
+
+end architecture dff;

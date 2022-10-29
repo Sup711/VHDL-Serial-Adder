@@ -1,0 +1,106 @@
+-- Company	: RIT
+-- Author	: Eliot Nagy
+-- Created	: 4/11/22
+--
+-- Project Name	: ex12
+-- File		: SerialAdderWithControlTB.vhd
+--
+-- Entity	: SerialAdderWithControlTB
+-- Architecture	: TB
+--
+-- Description	: Creates a test bench for the serial adder with a control unit
+--
+-- Notes	: None
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+entity SerialAdderWithControlTB is
+end entity SerialAdderWithControlTB;
+
+architecture TB of SerialAdderWithControlTB is
+
+	-- A function to nicely print the vectors
+	function vectorToString(vec: std_logic_vector) return string is
+		variable stmp : string(vec'left+1 downto 1);
+	begin
+		for i in vec'reverse_range loop
+			if vec(i) = '1' then
+				stmp(i+1) := '1';
+			else
+				stmp(i+1) := '0';
+			end if;
+		end loop;
+		return stmp;
+	end vectorToString;
+
+	-- Creates a test record
+	type testRecord is record
+		inA, inB : std_logic_vector(3 downto 0);
+		outSum : std_logic_vector(3 downto 0);
+		outCarry : std_logic;
+	end record;
+
+	type testRecordArray is array (natural range <>) of testRecord;
+
+	-- Used to check the outputs based on the inputs
+	constant tests : testRecordArray := (
+		(X"0", X"4", X"4", '0'), 
+		(X"C", X"E", X"A", '1'), 
+		(X"8", X"A", X"2", '1'),
+		(X"F", X"F", X"E", '1'), 
+		(X"F", X"1", X"0", '1'), 
+		(X"A", X"5", X"2", '0'), 
+		(X"8", X"7", X"F", '0')); 
+
+	-- Creates the internal variables that will be used to assign values to the serial adder and control unit
+	signal in_a, in_b : std_logic_vector(3 downto 0):= "0000";
+	signal clk, start, clear_sum : std_logic:= '0';
+	signal sum : std_logic_vector(3 downto 0);
+	signal carry, ready : std_logic;
+
+	constant clk_period : time := 50 ns;
+
+begin
+
+	-- Maps the test bench to the full adder with control
+	uut: entity work.FullAdderWithControl
+		port map(in_a => in_a, in_b => in_b, start => start, clk => clk, clear_sum => clear_sum,
+				 sum => sum, carry => carry, ready => ready);
+	
+	-- A process to control the clock
+	process begin
+		clk <= '0';
+		wait for clk_period/2;
+		clk <= '1';
+		wait for clk_period/2;
+	end process;
+
+	process begin
+	
+		clear_sum <= '1';
+
+		for i in tests'range loop
+			in_a <= tests(i).inA;
+			in_b <= tests(i).inB;
+
+			-- Starts the control unit and shifting process
+			start <= '1';	
+			wait for clk_period;	
+
+			-- Waits until ready from the control unit goes to 1
+			wait until ready = '1';
+
+			-- Checks the output
+			assert(sum = tests(i).outSum and carry = tests(i).outCarry)
+			report "Wrong Sum or Carry out for inputs A = " & vectorToString(tests(i).inA) & ", B = " & 
+				vectorToString(tests(i).inB) & ". Got Sum = " & vectorToString(sum) & ", Carry = " & std_logic'image(carry);
+
+			-- Stops the state machine from operating
+			start <= '0';
+			wait for clk_period;
+
+		end loop;
+		assert false report "The best bench passed" severity failure;
+	end process;
+end architecture TB;

@@ -1,0 +1,29 @@
+-- Company	: RIT
+-- Author	: Eliot Nagy
+-- Created	: 4/11/22
+--
+-- Project Name	: ex12
+-- File		: Inverter.vhd
+--
+-- Entity	: Inverter
+-- Architecture	: invert
+--
+-- Description	: Implements an inverter (not gate)
+--
+-- Notes	: None
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Creates the 1 input and 1 output 
+entity Inverter is
+	port(
+		A : in std_logic;
+		Y : out std_logic);
+end entity;
+
+-- Maps the output based on the input
+architecture invert of Inverter is
+begin
+	Y <= not A after 2 ns;
+end architecture invert;

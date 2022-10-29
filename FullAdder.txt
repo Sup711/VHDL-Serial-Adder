@@ -1,0 +1,32 @@
+-- Company	: RIT
+-- Author	: Eliot Nagy
+-- Created	: 4/11/22
+--
+-- Project Name	: ex12
+-- File		: FullAdder.vhd
+--
+-- Entity	: FullAdder
+-- Architecture	: fa
+--
+-- Description	: Implements a full adder
+--
+-- Notes	: None
+
+library ieee;
+use ieee.std_logic_1164.all;
+
+-- Creates the 3 inputs and 2 outputs
+entity FullAdder is
+	port (
+		signal A, B, Cin : in std_logic;
+		signal Cout, Sum : out std_logic);	
+end entity FullAdder;
+
+architecture fa of FullAdder is
+begin
+
+	--Assigns the outputs
+	Sum <= (A xor B xor Cin) after 8 ns;
+	Cout <= (A and B) or (A and Cin) or (B and Cin) after 8 ns;
+
+end architecture fa;
